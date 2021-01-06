@@ -1,0 +1,20 @@
+start program{
+    main class: Sampleee{
+            class method: main/ return type =int/ access modifier=public{
+                var: array_size
+                var: array
+                var: i
+                var: val
+            }
+    }
+    class: BinarySearch{
+        field: data/ type=int[]/ access modifier=private
+        class method: doSearch/ return type =int/ access modifier=private{
+            var: middle
+            var: foundVal
+        }
+        class method: find/ return type =int/ access modifier=public{
+            var: value1
+        }
+    }
+}

@@ -1,0 +1,17 @@
+start program{
+    main class: a{
+            class method: main/ return type =int/ access modifier=public{
+                var: var1
+                var: var2
+                var: var3
+            }
+    }
+    class: compare{
+        field: data/ type=int[]/ access modifier=private
+        class method: doCompare/ return type =int/ access modifier=private{
+        }
+    }
+    class: simple{
+        field: ferdowsi/ type=;/ access modifier=field
+    }
+}

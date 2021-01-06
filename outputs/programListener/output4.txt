@@ -1,0 +1,18 @@
+start program{
+    main class: MainTest{
+            field: x/ type=,/ access modifier=public
+            class method: xe/ return type =int/ access modifier=public{
+                var: k
+            }
+            class method: main/ return type =int/ access modifier=public{
+                var: t
+                var: a
+                var: pp
+            }
+    }
+    class: p{
+        field: t/ type=int/ access modifier=public
+        class method: r/ return type =int/ access modifier=public{
+        }
+    }
+}

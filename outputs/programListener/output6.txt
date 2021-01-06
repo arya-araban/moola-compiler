@@ -1,0 +1,14 @@
+start program{
+    class: father{
+        class method: (/ return type =int/ access modifier={
+        }
+    }
+    main class: childinheritsfather{
+            field: int[]/ type=;/ access modifier=field
+            class method: (/ return type =int/ access modifier={
+            }
+            class method: (/ return type =string/ access modifier={
+                var: j
+            }
+    }
+}
