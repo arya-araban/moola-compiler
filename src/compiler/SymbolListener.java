@@ -14,40 +14,38 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import java.util.*;
 
 public class SymbolListener implements MoolaListener {
-    Scope curScope;
     Stack<String> scopeStack = new Stack<String>();
-    LinkedHashMap<String, SymbolTable> stt = new LinkedHashMap<String, SymbolTable>(); //table of the symbol tables we have
 
     @Override
     public void enterProgram(MoolaParser.ProgramContext ctx) {
-        this.stt.put("GLOBAL", new SymbolTable("GLOBAL",ctx.start.getLine()));
-        this.scopeStack.push("GLOBAL");
+        SymbolTable.addSymbolTable(new SymbolTable("GLOBAL",ctx.start.getLine()));
+        this.scopeStack.push(SymbolTable.getLastTableName());
     }
 
     @Override
     public void exitProgram(MoolaParser.ProgramContext ctx) {
-        this.printAllST();
         this.scopeStack.pop();
 
+        SymbolTable.printAllST();
     }
 
     @Override
     public void enterClassDeclaration(MoolaParser.ClassDeclarationContext ctx) {
         String className = ctx.getChild(1).getText();
-        boolean exists = this.stt.get(this.scopeStack.peek()).lookup(className);
+        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookup(className);
         if (!exists) {
             String cls;
             cls = (ctx.parent.getChild(0).getText().equals("entry")) ? "mainClass_" : "Class_";
             if (ctx.getChild(2).getText().equals("inherits")) {
-                this.stt.get(this.scopeStack.peek()).insert(cls + className,
+                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(cls + className,
                         new ClassRecord(className, ctx.classParent.getText()));
             } else
-                this.stt.get(this.scopeStack.peek()).insert(cls + className,
+                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(cls + className,
                         new ClassRecord(className));
 
 
-            this.stt.put("CLASS " + className, new SymbolTable("CLASS " + className, ctx.start.getLine()));
-            this.scopeStack.push("CLASS " + className);
+            SymbolTable.addSymbolTable(new SymbolTable("CLASS " + className, ctx.start.getLine()));
+            this.scopeStack.push(SymbolTable.getLastTableName());
         }
 
 
@@ -71,7 +69,7 @@ public class SymbolListener implements MoolaListener {
     @Override
     public void enterFieldDeclaration(MoolaParser.FieldDeclarationContext ctx) {
         String am = ctx.getChild(0).getText().equals("field") ? "public" : ctx.fieldAccessModifier.getText();
-        this.stt.get(this.scopeStack.peek()).insert(ctx.fieldName.getText(),
+        SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(ctx.fieldName.getText(),
                 new MethodRecord(ctx.fieldName.getText(), ctx.fieldType.getText(), am));
     }
 
@@ -93,7 +91,7 @@ public class SymbolListener implements MoolaListener {
     @Override
     public void enterMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
         String methodName = ctx.methodName.getText();
-        boolean exists = this.stt.get(this.scopeStack.peek()).lookup(methodName);
+        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookup(methodName);
         if (!exists) {
             String am = ctx.getChild(0).getText().equals("function") ? "public" : ctx.methodAccessModifier.getText();
             ArrayList<String> meth = new ArrayList<String>(); //we'll use this to find params!
@@ -110,17 +108,17 @@ public class SymbolListener implements MoolaListener {
                 params.add(s);
             }
 
-            this.stt.get(this.scopeStack.peek()).insert(methodName,
+            SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(methodName,
                     new MethodRecord(methodName, ctx.t.getText(), am, params));
 
 
-            this.stt.put("METHOD " + methodName, new SymbolTable("METHOD " + methodName, ctx.start.getLine()));
-            this.scopeStack.push("METHOD " + methodName);
+            SymbolTable.addSymbolTable(new SymbolTable("METHOD " + methodName, ctx.start.getLine()));
+            this.scopeStack.push(SymbolTable.getLastTableName());
 
             /* ADD THE PARAMETERS WE SAW TO THE NEW SYMBOL TABLE) */
             for (String prm : params) {
                 String[] result = prm.split("~");
-                this.stt.get(this.scopeStack.peek()).insert(result[1],
+                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(result[1],
                         new VarRecord(result[1], result[0], result[2]));
             }
 
@@ -190,11 +188,11 @@ public class SymbolListener implements MoolaListener {
         list.set(0,list.get(0).replace("var",""));
         list.set(list.size()-1,list.get(list.size()-1).replace(";",""));
         String varName = ctx.getChild(1).getText();
-        boolean exists = this.stt.get(this.scopeStack.peek()).lookup(varName);
+        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookup(varName);
         if (!exists) {
             for(String elem:list) {
                 String[] result = elem.split("=");
-                this.stt.get(this.scopeStack.peek()).insert(result[0],
+                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(result[0],
                         new VarRecord(result[0], result[1]));
             }
         }
@@ -209,8 +207,8 @@ public class SymbolListener implements MoolaListener {
     @Override
     public void enterStatementBlock(MoolaParser.StatementBlockContext ctx) {
 
-        this.stt.put("BLOCK", new SymbolTable("BLOCK", ctx.start.getLine()));
-        this.scopeStack.push("BLOCK");
+        SymbolTable.addSymbolTable(new SymbolTable("BLOCK", ctx.start.getLine()));
+        this.scopeStack.push(SymbolTable.getLastTableName());
 
     }
 
@@ -519,33 +517,23 @@ public class SymbolListener implements MoolaListener {
 
     }
 
-    public void createScope() {
-        Scope scp = new Scope();
-        scp.par = curScope;
-        curScope = scp;
-    }
-
-    public void removeScope() {
-        curScope = curScope.par;
-    }
-
-    public void printAllST() {
-
-        Iterator it1 = stt.entrySet().iterator(); //iterating over the symbol tables we have
-        while (it1.hasNext()) {
-            Map.Entry st = (Map.Entry) it1.next();
-            System.out.println("\n" + st.getKey() + " -~-~-~- LINE: " +((SymbolTable) st.getValue()).getLine());
-            System.out.println("--------------");
-            Iterator it2 = ((SymbolTable) st.getValue()).getSt().entrySet().iterator(); //iterating over the entries of the symbol table
-            while (it2.hasNext()) {
-                Map.Entry pair = (Map.Entry) it2.next();
-                System.out.println("Key = " + pair.getKey().toString() + " | " + "Value = " + pair.getValue().toString());
-                it2.remove();
-            }
-            // Print blank line at end of symbol table.
-            it1.remove();
-            System.out.println();
-        }
-    }
+//    public void printAllST() {
+//
+//        Iterator it1 = stt.entrySet().iterator(); //iterating over the symbol tables we have
+//        while (it1.hasNext()) {
+//            Map.Entry st = (Map.Entry) it1.next();
+//            System.out.println("\n" + st.getKey() + " -~-~-~- LINE: " +((SymbolTable) st.getValue()).getLine());
+//            System.out.println("--------------");
+//            Iterator it2 = ((SymbolTable) st.getValue()).getSt().entrySet().iterator(); //iterating over the entries of the symbol table
+//            while (it2.hasNext()) {
+//                Map.Entry pair = (Map.Entry) it2.next();
+//                System.out.println("Key = " + pair.getKey().toString() + " | " + "Value = " + pair.getValue().toString());
+//                it2.remove();
+//            }
+//            // Print blank line at end of symbol table.
+//            it1.remove();
+//            System.out.println();
+//        }
+//    }
 
 }

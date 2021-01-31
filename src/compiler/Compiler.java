@@ -19,9 +19,15 @@ public class Compiler {
         ParseTree tree = parser.program();
         ParseTreeWalker walker = new ParseTreeWalker();
         MoolaListener listener = new ProgramPrinter();
-        MoolaListener listener2 = new SymbolListener();
         walker.walk(listener,tree);
+
+        //phase2
+        MoolaListener listener2 = new SymbolListener();
         walker.walk(listener2,tree);
+
+        //phase3
+        MoolaListener findErrors = new FindErrors();
+        walker.walk(findErrors, tree);
     }
 
 }
