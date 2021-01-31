@@ -21,6 +21,10 @@ class compare :
     end
 end
 
+class compare :
+
+end
+
 
 
 class simple:
