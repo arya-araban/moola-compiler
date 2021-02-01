@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import java.io.IOException;
 
 public class Compiler {
-    protected static int  cur_example = 7;
+    protected static int  cur_example = 6;
 
     public static void main(String[] args) throws IOException {
         CharStream stream = CharStreams.fromFileName("./sample/Sample"+ cur_example +".mla");

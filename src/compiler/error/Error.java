@@ -14,7 +14,7 @@ public class Error{
     }
 
     public String toString(){
-        return "Error" + type + " : in line " + line + ":" + column + " , " + text;
+        return "Error" + type + " : in line [" + line + ":" + column + "], " + text;
     }
 
 }

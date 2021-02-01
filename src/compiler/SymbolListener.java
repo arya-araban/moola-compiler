@@ -28,6 +28,7 @@ public class SymbolListener implements MoolaListener {
     public void exitProgram(MoolaParser.ProgramContext ctx) {
         this.scopeStack.pop();
         SymbolTable.printAllST();
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         SymbolListener.printErrors(errors);
     }
 
@@ -37,29 +38,27 @@ public class SymbolListener implements MoolaListener {
         int line = ctx.start.getLine();
         int column = ctx.className.getCharPositionInLine();
 
+        String cls;
+        cls = (ctx.parent.getChild(0).getText().equals("entry")) ? "mainClass_" : "Class_";
 
+        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(cls + className);
 
-            String cls;
-            cls = (ctx.parent.getChild(0).getText().equals("entry")) ? "mainClass_" : "Class_";
-
-        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookup(cls + className);
         if (exists) {
-            errors.add(new Error(101, line, column, "class " + className + " has been defined already"));
-            className += "DUPLICATE";
-        }
-            if (ctx.getChild(2).getText().equals("inherits")) {
-                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(cls + className,
-                        new ClassRecord(className, ctx.classParent.getText()));
-            } else
-                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(cls + className,
-                        new ClassRecord(className));
-
-
-            SymbolTable.addSymbolTable(new SymbolTable("CLASS " + className, line, column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
-            this.scopeStack.push(SymbolTable.getLastTableName());
+            errors.add(new Error(101, line, column, "class [" + className + "] has been defined already"));
+            className += "_" + line + "_" + column;
         }
 
+        if (ctx.getChild(2).getText().equals("inherits")) {
+            SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(cls + className,
+                    new ClassRecord(className, ctx.classParent.getText()));
+        } else
+            SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(cls + className,
+                    new ClassRecord(className));
 
+
+        SymbolTable.addSymbolTable(new SymbolTable("CLASS " + className, line, column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
+        this.scopeStack.push(SymbolTable.getLastTableName());
+    }
 
 
     @Override
@@ -79,9 +78,17 @@ public class SymbolListener implements MoolaListener {
 
     @Override
     public void enterFieldDeclaration(MoolaParser.FieldDeclarationContext ctx) {
+        String fieldName = ctx.fieldName.getText();
+        int line = ctx.start.getLine();
+        int column = ctx.fieldName.getCharPositionInLine();
+        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(fieldName);
+        if (exists) {
+            errors.add(new Error(104, line, column, "field [" + fieldName + "] has been defined already"));
+            fieldName += "_" + line + "_" + column;
+        }
         String am = ctx.getChild(0).getText().equals("field") ? "public" : ctx.fieldAccessModifier.getText();
-        SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(ctx.fieldName.getText(),
-                new MethodRecord(ctx.fieldName.getText(), ctx.fieldType.getText(), am));
+        SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(fieldName,
+                new MethodRecord(fieldName, ctx.fieldType.getText(), am));
     }
 
     @Override
@@ -102,38 +109,44 @@ public class SymbolListener implements MoolaListener {
     @Override
     public void enterMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
         String methodName = ctx.methodName.getText();
+
+        int line = ctx.start.getLine();
         int column = ctx.methodName.getCharPositionInLine();
-        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookup(methodName);
-        if (!exists) {
-            String am = ctx.getChild(0).getText().equals("function") ? "public" : ctx.methodAccessModifier.getText();
-            ArrayList<String> meth = new ArrayList<String>(); //we'll use this to find params!
-            for (int i = 0; i < ctx.children.size(); i++) {
-                meth.add(ctx.getChild(i).getText());
-                if (ctx.getChild(i).getText().equals(")")) break;
-            }
-            int strt = meth.indexOf("(") + 1, end = meth.indexOf(")") - 1, indx = 1;
 
-            ArrayList<String> params = new ArrayList<String>();
-            for (int i = strt; i < end; i += 4) {
-                String s = meth.get(i + 2) + "~" + meth.get(i) + "~" + indx;
-                indx++;
-                params.add(s);
-            }
+        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(methodName);
 
-            SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(methodName,
-                    new MethodRecord(methodName, ctx.t.getText(), am, params));
+        if (exists) {
+            errors.add(new Error(102, line, column, "method [" + methodName + "] has been defined already"));
+            methodName += "_" + line + "_" + column;
+        }
+
+        String am = ctx.getChild(0).getText().equals("function") ? "public" : ctx.methodAccessModifier.getText();
+        ArrayList<String> meth = new ArrayList<String>(); //we'll use this to find params!
+        for (int i = 0; i < ctx.children.size(); i++) {
+            meth.add(ctx.getChild(i).getText());
+            if (ctx.getChild(i).getText().equals(")")) break;
+        }
+        int strt = meth.indexOf("(") + 1, end = meth.indexOf(")") - 1, indx = 1;
+
+        ArrayList<String> params = new ArrayList<String>();
+        for (int i = strt; i < end; i += 4) {
+            String s = meth.get(i + 2) + "~" + meth.get(i) + "~" + indx;
+            indx++;
+            params.add(s);
+        }
+
+        SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(methodName,
+                new MethodRecord(methodName, ctx.t.getText(), am, params));
 
 
-            SymbolTable.addSymbolTable(new SymbolTable("METHOD " + methodName, ctx.start.getLine(), column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
-            this.scopeStack.push(SymbolTable.getLastTableName());
+        SymbolTable.addSymbolTable(new SymbolTable("METHOD " + methodName, line, column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
+        this.scopeStack.push(SymbolTable.getLastTableName());
 
-            /* ADD THE PARAMETERS WE SAW TO THE NEW SYMBOL TABLE) */
-            for (String prm : params) {
-                String[] result = prm.split("~");
-                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(result[1],
-                        new VarRecord(result[1], result[0], result[2]));
-            }
-
+        /* ADD THE PARAMETERS WE SAW TO THE NEW SYMBOL TABLE) */
+        for (String prm : params) {
+            String[] result = prm.split("~");
+            SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(result[1],
+                    new VarRecord(result[1], result[0], result[2]));
         }
 
 
@@ -196,19 +209,26 @@ public class SymbolListener implements MoolaListener {
 
     @Override
     public void enterStatementVarDef(MoolaParser.StatementVarDefContext ctx) {
+        int line = ctx.start.getLine();
+        int column = ctx.start.getCharPositionInLine();
+
         List<String> list = new ArrayList<String>(Arrays.asList(ctx.getText().split(",(?![^()]*+\\))"))); //doing split where comma not in parantheses
         list.set(0, list.get(0).replace("var", ""));
         list.set(list.size() - 1, list.get(list.size() - 1).replace(";", ""));
         String varName = ctx.getChild(1).getText();
-        boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookup(varName);
-        if (!exists) {
-            for (String elem : list) {
-                String[] result = elem.split("=");
-                SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(result[0],
-                        new VarRecord(result[0], result[1]));
-            }
-        }
 
+        for (String elem : list) {
+            String[] result = elem.split("=");
+            boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(result[0]);
+
+            if (exists) {
+                errors.add(new Error(103, line, column, "var [" + result[0] + "] has been defined already"));
+                result[0] += "_" + line + "_" + column;
+            }
+
+            SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(result[0],
+                    new VarRecord(result[0], result[1]));
+        }
     }
 
     @Override

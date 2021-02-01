@@ -15,12 +15,14 @@ class father:
 end
 entry class child inherits father:
 	field goods int[];
+	field goods int[];
 	function length() returns int:
 		return goods.length;
 	end
 	function populate() returns string:
 		goods=new int[10];
-		i=0;
+		var i=0;
+		var i=0;
 		var j=0;
 		if( a == 1 )
 		    if( a == 2 )
@@ -36,5 +38,7 @@ entry class child inherits father:
 			if(i==10)
 				break;
 		end
+	end
+	function populate() returns string:
 	end
 end

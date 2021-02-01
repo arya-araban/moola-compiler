@@ -52,12 +52,16 @@ public class SymbolTable {
     // false.
     public boolean lookup(String key) {
         SymbolTable parent = this;
-        while (parent!=null){
-            if (parent.items.get(key)!=null)
+        while (parent != null) {
+            if (parent.items.get(key) != null)
                 return true;
             parent = parent.par;
         }
         return false;
+    }
+
+    public boolean lookupCurScope(String key) {
+        return this.items.get(key) != null;
     }
 
 
@@ -97,21 +101,4 @@ public class SymbolTable {
         }
     }
 
-
-    // Print the symbol table to console
-//    public void prettyPrint() {
-//
-//        System.out.println("\nSymbol table " + tableName);
-//        System.out.println("--------------");
-//        // According to the javadoc, LinkedHashMap.entrySet() should be in the order
-//        // that the elements were inserted initially.
-//        Iterator it = st.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry pair = (Map.Entry) it.next();
-//            System.out.println("Key = " + pair.getKey().toString() + " | " + "Value = " + pair.getValue().toString());
-//            it.remove();
-//        }
-//        // Print blank line at end of symbol table.
-//        System.out.println();
-//    }
 }
