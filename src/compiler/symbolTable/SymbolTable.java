@@ -17,11 +17,11 @@ public class SymbolTable {
     static String lastTableName;
 
 
-    public static void printAllTables() {
-        for (Object value : symbolTables.values()) {
-            System.out.println(value);
-        }
-    }
+//    public static void printAllTables() {
+//        for (Object value : symbolTables.values()) {
+//            System.out.println(value);
+//        }
+//    }
 
     public String getTableName() {
         return tableName;
@@ -80,8 +80,16 @@ public class SymbolTable {
 
 
     public static void addSymbolTable(SymbolTable st) {
-        symbolTables.put(st.tableName, st);
-        lastTableName = st.tableName;
+        String finalName;
+        if (st.tableName.contains(" "))
+            finalName = st.tableName.substring(0, st.tableName.indexOf(" "));
+        else
+            finalName = st.tableName;
+
+        finalName = finalName + "_" + st.line + "_" + st.column;
+        System.out.println(finalName);
+        symbolTables.put(finalName, st);
+        lastTableName = finalName;
     }
 
     public Record getItem(String key) {
@@ -107,7 +115,7 @@ public class SymbolTable {
         for (Map.Entry<String, SymbolTable> entry : symbolTables.entrySet()) {
             String STKey = entry.getKey();
             SymbolTable STValue = entry.getValue();
-            System.out.println("\n" + STKey + " -~-~-~- LINE: " + STValue.getLine());
+            System.out.println("\n" + STValue.tableName + " -~-~-~- LINE: " + STValue.getLine());
             System.out.println("--------------");
             for (Map.Entry<String, Record> entry2 : STValue.getItems().entrySet()) {
                 String recordKey = entry2.getKey();

@@ -16,7 +16,6 @@ import java.util.*;
 
 public class SymbolListener implements MoolaListener {
     Stack<String> scopeStack = new Stack<String>();
-    ArrayList<Error> errors = new ArrayList<Error>();
 
     @Override
     public void enterProgram(MoolaParser.ProgramContext ctx) {
@@ -29,7 +28,6 @@ public class SymbolListener implements MoolaListener {
         this.scopeStack.pop();
         SymbolTable.printAllST();
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        SymbolListener.printErrors(errors);
 
     }
 
@@ -45,7 +43,7 @@ public class SymbolListener implements MoolaListener {
         boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(cls + className);
 
         if (exists) {
-            errors.add(new Error(101, line, column, "class [" + className + "] has been defined already"));
+            FindErrors.errors.add(new Error(101, line, column, "class [" + className + "] has been defined already"));
             className += "_" + line + "_" + column;
         }
 
@@ -84,7 +82,7 @@ public class SymbolListener implements MoolaListener {
         int column = ctx.fieldName.getCharPositionInLine();
         boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(fieldName);
         if (exists) {
-            errors.add(new Error(104, line, column, "field [" + fieldName + "] has been defined already"));
+            FindErrors.errors.add(new Error(104, line, column, "field [" + fieldName + "] has been defined already"));
             fieldName += "_" + line + "_" + column;
         }
         String am = ctx.getChild(0).getText().equals("field") ? "public" : ctx.fieldAccessModifier.getText();
@@ -117,7 +115,7 @@ public class SymbolListener implements MoolaListener {
         boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(methodName);
 
         if (exists) {
-            errors.add(new Error(102, line, column, "method [" + methodName + "] has been defined already"));
+            FindErrors.errors.add(new Error(102, line, column, "method [" + methodName + "] has been defined already"));
             methodName += "_" + line + "_" + column;
         }
 
@@ -222,7 +220,7 @@ public class SymbolListener implements MoolaListener {
             boolean exists = SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).lookupCurScope(result[0]);
 
             if (exists) {
-                errors.add(new Error(103, line, column, "var [" + result[0] + "] has been defined already"));
+                FindErrors.errors.add(new Error(103, line, column, "var [" + result[0] + "] has been defined already"));
                 result[0] += "_" + line + "_" + column;
             }
 
@@ -238,8 +236,9 @@ public class SymbolListener implements MoolaListener {
 
     @Override
     public void enterStatementBlock(MoolaParser.StatementBlockContext ctx) {
+        int line = ctx.start.getLine();
         int column = ctx.start.getCharPositionInLine();
-        SymbolTable.addSymbolTable(new SymbolTable("BLOCK", ctx.start.getLine(), column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
+        SymbolTable.addSymbolTable(new SymbolTable("BLOCK", line , column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
         this.scopeStack.push(SymbolTable.getLastTableName());
 
     }

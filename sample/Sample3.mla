@@ -27,6 +27,7 @@ entry class donyaa:
 	private field felanJaaHaa felanJaa[];
 	function main() returns int:
 		felani=new felanAagha();
+		masa = 33;
 		felanJaaHaa=new felanJaa[20];
 		i=0;
 		while(i<felanJaaHaa.length)begin

@@ -1,5 +1,6 @@
 package compiler;
 
+import compiler.error.Error;
 import compiler.symbolTable.SymbolTable;
 import gen.MoolaListener;
 import gen.MoolaParser;
@@ -14,26 +15,29 @@ import java.util.ArrayList;
 
 public class FindErrors implements MoolaListener {
     SymbolTable curST;
+    public static ArrayList<Error> errors = new ArrayList<Error>();
 
     @Override
     public void enterProgram(MoolaParser.ProgramContext ctx) {
-
-
+        curST = SymbolTable.getSymbolTableByKey("GLOBAL_" + ctx.start.getLine() + "_0");
     }
 
     @Override
     public void exitProgram(MoolaParser.ProgramContext ctx) {
-
+        curST = curST.getPar();
+        SymbolListener.printErrors(FindErrors.errors);
     }
 
     @Override
     public void enterClassDeclaration(MoolaParser.ClassDeclarationContext ctx) {
-
+        int line = ctx.start.getLine();
+        int column = ctx.className.getCharPositionInLine();
+        curST = SymbolTable.getSymbolTableByKey("CLASS_" + line + "_" + column);
     }
 
     @Override
     public void exitClassDeclaration(MoolaParser.ClassDeclarationContext ctx) {
-
+        curST = curST.getPar();
     }
 
     @Override
@@ -68,12 +72,15 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
-
+        System.out.println(ctx.getText());
+        int line = ctx.start.getLine();
+        int column = ctx.methodName.getCharPositionInLine();
+        curST = SymbolTable.getSymbolTableByKey("METHOD_" + line + "_" + column);
     }
 
     @Override
     public void exitMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
-
+        curST = curST.getPar();
     }
 
     @Override
@@ -138,12 +145,15 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterStatementBlock(MoolaParser.StatementBlockContext ctx) {
+        int line = ctx.start.getLine();
+        int column = ctx.start.getCharPositionInLine();
+        curST = SymbolTable.getSymbolTableByKey("BLOCK_" + line + "_" + column);
 
     }
 
     @Override
     public void exitStatementBlock(MoolaParser.StatementBlockContext ctx) {
-
+        curST = curST.getPar();
     }
 
     @Override
@@ -208,7 +218,12 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterStatementAssignment(MoolaParser.StatementAssignmentContext ctx) {
-
+        String curAssigned = ctx.getChild(0).getText();
+        int line = ctx.start.getLine();
+        int column = ctx.start.getCharPositionInLine();
+        if (curST.getItem(curAssigned)==null){
+            FindErrors.errors.add(new Error(106, line, column, "can not find variable [" + curAssigned + "]"));
+        }
     }
 
     @Override
