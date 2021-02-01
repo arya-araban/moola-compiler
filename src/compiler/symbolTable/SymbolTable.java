@@ -10,16 +10,26 @@ public class SymbolTable {
     Map<String, Record> items = new LinkedHashMap<String, Record>();
     int line, column;
     SymbolTable par;
-
-    public String getTableName() {
-        return tableName;
-    }
-
     String tableName;
 
     //these variables static -> for the entire symboltables
     static LinkedHashMap<String, SymbolTable> symbolTables = new LinkedHashMap<String, SymbolTable>();
     static String lastTableName;
+
+
+    public static void printAllTables() {
+        for (Object value : symbolTables.values()) {
+            System.out.println(value);
+        }
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public SymbolTable getPar() {
+        return par;
+    }
 
     public Map<String, Record> getItems() {
         return items;
@@ -74,6 +84,16 @@ public class SymbolTable {
         lastTableName = st.tableName;
     }
 
+    public Record getItem(String key) {
+        SymbolTable cur = this;
+        while (cur != null) {
+            if (cur.items.get(key) != null)
+                return cur.items.get(key);
+            cur = cur.par;
+        }
+        return null;
+    }
+
     public static SymbolTable getSymbolTableByKey(String key) {
         return symbolTables.get(key);
     }
@@ -84,21 +104,20 @@ public class SymbolTable {
 
     public static void printAllST() {
 
-        Iterator it1 = symbolTables.entrySet().iterator(); //iterating over the symbol tables we have
-        while (it1.hasNext()) {
-            Map.Entry st = (Map.Entry) it1.next();
-            System.out.println("\n" + st.getKey() + " -~-~-~- LINE: " + ((SymbolTable) st.getValue()).getLine());
+        for (Map.Entry<String, SymbolTable> entry : symbolTables.entrySet()) {
+            String STKey = entry.getKey();
+            SymbolTable STValue = entry.getValue();
+            System.out.println("\n" + STKey + " -~-~-~- LINE: " + STValue.getLine());
             System.out.println("--------------");
-            Iterator it2 = ((SymbolTable) st.getValue()).getItems().entrySet().iterator(); //iterating over the entries of the symbol table
-            while (it2.hasNext()) {
-                Map.Entry pair = (Map.Entry) it2.next();
-                System.out.println("Key = " + pair.getKey().toString() + " | " + "Value = " + pair.getValue().toString());
-                it2.remove();
+            for (Map.Entry<String, Record> entry2 : STValue.getItems().entrySet()) {
+                String recordKey = entry2.getKey();
+                Record recordValue = entry2.getValue();
+                System.out.println("Key = " + recordKey.toString() + " | " + "Value = " + recordValue.toString());
             }
-            // Print blank line at end of symbol table.
-            it1.remove();
-            System.out.println();
         }
+        System.out.println();
+
     }
+
 
 }

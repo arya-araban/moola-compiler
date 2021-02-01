@@ -1,0 +1,8 @@
+start program{
+    main class: Sample5{
+            class method: (/ return type =int/ access modifier={
+                var: a
+                var: a
+            }
+    }
+}

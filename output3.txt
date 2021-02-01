@@ -1,0 +1,21 @@
+start program{
+    class: felanJaa{
+        class method: (/ return type =string/ access modifier={
+        }
+        field: string/ type=;/ access modifier=field
+        class method: (/ return type =boolean/ access modifier={
+        }
+    }
+    class: felanAagha{
+        field: makan/ type=string/ access modifier=public
+        class method: (/ return type =int/ access modifier={
+        }
+    }
+    main class: donyaa{
+            field: felani/ type=felanAagha/ access modifier=private
+            field: felanJaaHaa/ type=felanJaa[]/ access modifier=private
+            class method: (/ return type =int/ access modifier={
+                var: a
+            }
+    }
+}

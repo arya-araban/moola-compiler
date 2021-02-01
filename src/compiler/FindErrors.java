@@ -1,5 +1,6 @@
 package compiler;
 
+import compiler.symbolTable.SymbolTable;
 import gen.MoolaListener;
 import gen.MoolaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -12,8 +13,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class FindErrors implements MoolaListener {
-   @Override
+    SymbolTable curST;
+
+    @Override
     public void enterProgram(MoolaParser.ProgramContext ctx) {
+
 
     }
 

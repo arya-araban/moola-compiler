@@ -30,6 +30,7 @@ public class SymbolListener implements MoolaListener {
         SymbolTable.printAllST();
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         SymbolListener.printErrors(errors);
+
     }
 
     @Override
@@ -134,7 +135,6 @@ public class SymbolListener implements MoolaListener {
             indx++;
             params.add(s);
         }
-
         SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(methodName,
                 new MethodRecord(methodName, ctx.t.getText(), am, params));
 
