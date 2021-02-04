@@ -8,7 +8,6 @@ import compiler.symbolTable.VarRecord;
 import gen.MoolaListener;
 import gen.MoolaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -20,7 +19,7 @@ public class SymbolListener implements MoolaListener {
     @Override
     public void enterProgram(MoolaParser.ProgramContext ctx) {
         SymbolTable.addSymbolTable(new SymbolTable("GLOBAL", ctx.start.getLine(), 0, null));
-        this.scopeStack.push(SymbolTable.getLastTableName());
+        this.scopeStack.push(SymbolTable.getLastTableKey());
     }
 
     @Override
@@ -56,7 +55,7 @@ public class SymbolListener implements MoolaListener {
 
 
         SymbolTable.addSymbolTable(new SymbolTable("CLASS " + className, line, column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
-        this.scopeStack.push(SymbolTable.getLastTableName());
+        this.scopeStack.push(SymbolTable.getLastTableKey());
     }
 
 
@@ -138,7 +137,7 @@ public class SymbolListener implements MoolaListener {
 
 
         SymbolTable.addSymbolTable(new SymbolTable("METHOD " + methodName, line, column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
-        this.scopeStack.push(SymbolTable.getLastTableName());
+        this.scopeStack.push(SymbolTable.getLastTableKey());
 
         /* ADD THE PARAMETERS WE SAW TO THE NEW SYMBOL TABLE) */
         for (String prm : params) {
@@ -239,7 +238,7 @@ public class SymbolListener implements MoolaListener {
         int line = ctx.start.getLine();
         int column = ctx.start.getCharPositionInLine();
         SymbolTable.addSymbolTable(new SymbolTable("BLOCK", line , column, SymbolTable.getSymbolTableByKey(this.scopeStack.peek())));
-        this.scopeStack.push(SymbolTable.getLastTableName());
+        this.scopeStack.push(SymbolTable.getLastTableKey());
 
     }
 

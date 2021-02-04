@@ -115,7 +115,6 @@ public class FindErrors implements MoolaListener {
         int line = ctx.start.getLine();
         int column = ctx.className.getCharPositionInLine();
 
-        /* ***** */
         String txt = ctx.getText();
 
         //finding mismatch for functions -- catching error 220
@@ -126,7 +125,7 @@ public class FindErrors implements MoolaListener {
             String ts = myList.get(i);
             int cnt = UsefulMethods.countChar(ts, ',');
             ts = ts.substring(1,ts.indexOf("("));
-            ts = ts + "~~"+cnt;
+            ts = ts + "~~"+(cnt+1);
             myList.set(i,ts);
         }
         for (String val1:myList){
@@ -241,7 +240,10 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterStatement(MoolaParser.StatementContext ctx) {
-
+        for (int i=0;i<ctx.children.size();i++){
+            System.out.println(ctx.getChild(i).getText());
+        }
+        System.out.println("!_!_!_!_!_!_!_!_!");
     }
 
     @Override

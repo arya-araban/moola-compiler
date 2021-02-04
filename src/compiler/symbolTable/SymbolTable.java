@@ -1,6 +1,5 @@
 package compiler.symbolTable;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -14,7 +13,7 @@ public class SymbolTable {
 
     //these variables static -> for the entire symboltables
     static LinkedHashMap<String, SymbolTable> symbolTables = new LinkedHashMap<String, SymbolTable>();
-    static String lastTableName;
+    static String lastTableKey;
 
 
 //    public static void printAllTables() {
@@ -89,7 +88,7 @@ public class SymbolTable {
         finalName = finalName + "_" + st.line + "_" + st.column;
         System.out.println(finalName);
         symbolTables.put(finalName, st);
-        lastTableName = finalName;
+        lastTableKey = finalName;
     }
 
     public Record getItem(String key) {
@@ -106,8 +105,8 @@ public class SymbolTable {
         return symbolTables.get(key);
     }
 
-    public static String getLastTableName() {
-        return lastTableName;
+    public static String getLastTableKey() {
+        return lastTableKey;
     }
 
     public static void printAllST() {

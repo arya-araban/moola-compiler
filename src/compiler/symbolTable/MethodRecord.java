@@ -9,12 +9,14 @@ public class MethodRecord extends Record {
     String accessModifier = "public";
     ArrayList<String> parameters;
     String fieldOrMethod = "Method";
+    int numberOfParams;
 
     public MethodRecord(String n, String returnType, String accessModifier, ArrayList<String> parameters) { /*FOR ACTUAL METHODS*/
         super(n);
         this.returnType = returnType;
         this.accessModifier = accessModifier;
         this.parameters = parameters;
+        this.numberOfParams = parameters.size();
     }
 
     public MethodRecord(String n, String returnType, String accessModifier) { /* FOR FIELDS */
@@ -23,6 +25,11 @@ public class MethodRecord extends Record {
         this.accessModifier = accessModifier;
         this.fieldOrMethod = "Field";
     }
+
+    public int getNumberOfParams() {
+        return numberOfParams;
+    }
+
 
     @Override
     public String toString() { //THE VALUE WE HAVE FOR OBJECT
