@@ -1,25 +1,107 @@
 package compiler;
 
 import compiler.error.Error;
+import compiler.misc.UsefulMethods;
+import compiler.symbolTable.ClassRecord;
+import compiler.symbolTable.Record;
 import compiler.symbolTable.SymbolTable;
 import gen.MoolaListener;
 import gen.MoolaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import java.util.*;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 
 public class FindErrors implements MoolaListener {
     SymbolTable curST;
+    ArrayList<String> currentFunctions = new ArrayList<String>(); // an arraylist in form of "func-name~~numVariables"
+
     public static ArrayList<Error> errors = new ArrayList<Error>();
 
     @Override
     public void enterProgram(MoolaParser.ProgramContext ctx) {
         curST = SymbolTable.getSymbolTableByKey("GLOBAL_" + ctx.start.getLine() + "_0");
+
+        //Catching error 410 in here
+        System.out.println("--------------Test-------------");
+        Map<String, Record> itemss = curST.getItems();
+        String key;
+        ClassRecord value;
+        String cName;
+        String pName;
+        Map<String, ClassRecord> temp = new HashMap<>();
+        for (Map.Entry<String, Record> entry : itemss.entrySet()) {
+            key = entry.getKey();
+            if (!key.contains("Class_")) {
+                continue;
+            }
+            value = (ClassRecord) entry.getValue();
+            cName = value.getName();
+            if (cName != null) {
+                temp.put(cName, value);
+            }
+        }
+        String classes = findParent(temp);
+//        System.out.println(classes);
+        String[] inherits = classes.split("~~");
+        for (String inherit : inherits) {
+            boolean dup;
+            String[] item = inherit.split(",");
+            dup = UsefulMethods.haveDuplicate(item);
+            if (dup) {
+                StringBuilder tempError = new StringBuilder();
+                for (String s : item) {
+                    tempError.append("[").append(s).append("] ->");
+                }
+                FindErrors.errors.add(new Error(410, tempError.substring(0, tempError.length() - 3)));
+            }
+        }
+        System.out.println("--------------Test-------------");
+    }
+
+    public String findParent(Map<String, ClassRecord> classes) {//410
+        String ouput;
+        StringBuilder sb = new StringBuilder();
+        String[][] name = new String[classes.size()][classes.size()];
+        String val, cName, pName, tempPname;
+        ClassRecord cr, tempPar;
+        for (Map.Entry<String, ClassRecord> c : classes.entrySet()) {
+            cr = c.getValue();
+            cName = cr.getName();
+            pName = cr.getParentClass();
+            boolean haveParent = true;
+            if (pName != null) {
+                if (pName.equals(cName)) {
+                    sb.append(cName).append(",").append(pName).append("~~");
+                } else {
+                    tempPname = pName;
+                    sb.append(cName).append(",");
+                    while (haveParent) {
+                        if (classes.get(tempPname) != null) {
+                            tempPar = classes.get(tempPname);
+                            if (tempPar.getParentClass() != null) {
+//                                tempPname = pName;
+                                sb.append(tempPname).append(",");
+                                tempPname = tempPar.getParentClass();
+                                if (tempPname.equals(cName)) {
+                                    haveParent = false;
+                                    sb.append(tempPname).append(",").append("~~");
+//                                System.out.println(sb.toString());
+                                }
+                            } else {
+                                haveParent = false;
+                                sb.append(tempPname).append(",").append("~~");
+//                            System.out.println(sb.toString());
+                            }
+                        }
+                    }
+                }
+            }
+//            System.out.println(cName + ": " + pName);
+        }
+        ouput = sb.toString();
+        return ouput;
     }
 
     @Override
@@ -32,7 +114,37 @@ public class FindErrors implements MoolaListener {
     public void enterClassDeclaration(MoolaParser.ClassDeclarationContext ctx) {
         int line = ctx.start.getLine();
         int column = ctx.className.getCharPositionInLine();
+
+        /* ***** */
+        String txt = ctx.getText();
+
+        //finding mismatch for functions -- catching error 220
+        ArrayList<String> myList;
+        myList = UsefulMethods.getAllMatches(txt,"\\.(.*?)(.\\))");
+        myList.removeIf(val -> !val.contains("("));
+        for (int i=0; i<myList.size();i++){
+            String ts = myList.get(i);
+            int cnt = UsefulMethods.countChar(ts, ',');
+            ts = ts.substring(1,ts.indexOf("("));
+            ts = ts + "~~"+cnt;
+            myList.set(i,ts);
+        }
+        for (String val1:myList){
+            String tmp1 = val1.substring(0,val1.indexOf("~"));
+            for (String val2:currentFunctions){
+               String tmp2 = val2.substring(0,val2.indexOf("~"));
+               if (tmp1.equals(tmp2)){
+                   if (!val1.endsWith(val2.substring(val2.length() - 1)))
+                   {
+                       FindErrors.errors.add(new Error(220, line , column,"mismatch arguments for function [" + tmp1+"]"));
+                   }
+
+               }
+            }
+        }
+
         curST = SymbolTable.getSymbolTableByKey("CLASS_" + line + "_" + column);
+
     }
 
     @Override
@@ -72,7 +184,10 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
-        System.out.println(ctx.getText());
+        String txt = ctx.getText();
+        txt = txt.substring(8, txt.indexOf(")")+1);
+        txt = txt.substring(0,txt.indexOf("(")) + "~~" + UsefulMethods.countChar(txt,':');
+        currentFunctions.add(txt);
         int line = ctx.start.getLine();
         int column = ctx.methodName.getCharPositionInLine();
         curST = SymbolTable.getSymbolTableByKey("METHOD_" + line + "_" + column);
@@ -80,6 +195,7 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void exitMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
+
         curST = curST.getPar();
     }
 
@@ -217,7 +333,8 @@ public class FindErrors implements MoolaListener {
     }
 
     @Override
-    public void enterStatementAssignment(MoolaParser.StatementAssignmentContext ctx) {
+    public void enterStatementAssignment(MoolaParser.StatementAssignmentContext ctx) { //catching error 106
+
         String curAssigned = ctx.getChild(0).getText();
         int line = ctx.start.getLine();
         int column = ctx.start.getCharPositionInLine();
@@ -233,7 +350,6 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterStatementInc(MoolaParser.StatementIncContext ctx) {
-
     }
 
     @Override

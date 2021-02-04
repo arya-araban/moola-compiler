@@ -11,7 +11,7 @@ start program{
         class method: (/ return type =int/ access modifier={
         }
     }
-    main class: donyaa{
+    main class: donyaainheritsdonyaa{
             field: felani/ type=felanAagha/ access modifier=private
             field: felanJaaHaa/ type=felanJaa[]/ access modifier=private
             class method: (/ return type =int/ access modifier={

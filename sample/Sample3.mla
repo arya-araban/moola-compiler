@@ -1,4 +1,4 @@
-class felanJaa:
+class felanJaa inherits felanAagha:
 	function bedeEsmRo() returns string:
 		return esm;
 	end
@@ -22,7 +22,7 @@ class felanAagha inherits felanJaa:
 		print(esmesh);
 	end
 end
-entry class donyaa:
+entry class donyaa inherits donyaa:
 	private field felani felanAagha;
 	private field felanJaaHaa felanJaa[];
 	function main() returns int:
