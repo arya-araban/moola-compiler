@@ -131,7 +131,7 @@ public class SymbolListener implements MoolaListener {
             String s = meth.get(i + 2) + "~" + meth.get(i) + "~" + indx;
             indx++;
             params.add(s);
-        }
+        }// separate the things we want for the parameters
         SymbolTable.getSymbolTableByKey(this.scopeStack.peek()).insert(methodName,
                 new MethodRecord(methodName, ctx.t.getText(), am, params));
 

@@ -3,6 +3,7 @@ package compiler;
 import compiler.error.Error;
 import compiler.misc.UsefulMethods;
 import compiler.symbolTable.ClassRecord;
+import compiler.symbolTable.MethodRecord;
 import compiler.symbolTable.Record;
 import compiler.symbolTable.SymbolTable;
 import gen.MoolaListener;
@@ -15,6 +16,7 @@ import java.util.*;
 
 public class FindErrors implements MoolaListener {
     SymbolTable curST;
+    String lastMethodName;
     ArrayList<String> currentFunctions = new ArrayList<String>(); // an arraylist in form of "func-name~~numVariables"
 
     public static ArrayList<Error> errors = new ArrayList<Error>();
@@ -183,18 +185,41 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
+        int line = ctx.start.getLine();
+        int column = ctx.methodName.getCharPositionInLine();
+        lastMethodName = ctx.methodName.getText();
         String txt = ctx.getText();
+
         txt = txt.substring(8, txt.indexOf(")")+1);
         txt = txt.substring(0,txt.indexOf("(")) + "~~" + UsefulMethods.countChar(txt,':');
         currentFunctions.add(txt);
-        int line = ctx.start.getLine();
-        int column = ctx.methodName.getCharPositionInLine();
+
         curST = SymbolTable.getSymbolTableByKey("METHOD_" + line + "_" + column);
+
     }
 
     @Override
     public void exitMethodDeclaration(MoolaParser.MethodDeclarationContext ctx) {
-
+        //System.out.println(curST.getItem(lastMethodName));
+        int line = ctx.start.getLine();
+        int column = ctx.methodName.getCharPositionInLine();
+        MethodRecord methRec = (MethodRecord) curST.getItem(lastMethodName);
+        ArrayList<String> classesToCheck = new ArrayList<String>();
+        for (String item : methRec.getParameters()){
+           if (item.contains("~")) {
+               String sbstr = item.substring(0, item.indexOf("~"));
+               System.out.println(sbstr);
+               if (!sbstr.equals("bool") && !sbstr.equals("int")){
+                   classesToCheck.add("Class_"+sbstr);
+               }
+           }
+        }
+        for (int i=0; i < classesToCheck.size();i++){
+            if (!curST.lookup(classesToCheck.get(i))){
+                FindErrors.errors.add(new Error(105, line, column, "can not find " + classesToCheck.get(i)));
+            }
+            if (i==classesToCheck.size()-1) classesToCheck.clear();
+        }
         curST = curST.getPar();
     }
 
@@ -240,10 +265,7 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterStatement(MoolaParser.StatementContext ctx) {
-        for (int i=0;i<ctx.children.size();i++){
-            System.out.println(ctx.getChild(i).getText());
-        }
-        System.out.println("!_!_!_!_!_!_!_!_!");
+
     }
 
     @Override
@@ -336,7 +358,7 @@ public class FindErrors implements MoolaListener {
 
     @Override
     public void enterStatementAssignment(MoolaParser.StatementAssignmentContext ctx) { //catching error 106
-
+       // System.out.println(ctx.getText());
         String curAssigned = ctx.getChild(0).getText();
         int line = ctx.start.getLine();
         int column = ctx.start.getCharPositionInLine();

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 public class MethodRecord extends Record {
     String returnType;
     String accessModifier = "public";
+
+
     ArrayList<String> parameters;
     String fieldOrMethod = "Method";
     int numberOfParams;
@@ -24,6 +26,10 @@ public class MethodRecord extends Record {
         this.returnType = returnType;
         this.accessModifier = accessModifier;
         this.fieldOrMethod = "Field";
+    }
+
+    public ArrayList<String> getParameters() {
+        return parameters;
     }
 
     public int getNumberOfParams() {
