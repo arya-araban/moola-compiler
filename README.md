@@ -1,4 +1,4 @@
-# SimpleCompiler
+# Moola Compiler 
 A compiler written for a simple language called Moola
 
 ## Notes
